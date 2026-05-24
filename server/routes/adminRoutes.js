@@ -27,7 +27,9 @@ router.get('/stats', async (req, res) => {
 
 router.post('/players', async (req, res) => {
   try {
-    const player = await Player.create(req.body);
+    const { name, role, group, basePrice } = req.body;
+    if (!name || !group) return res.status(400).json({ error: 'Name and group required' });
+    const player = await Player.create({ name, role, group, basePrice: parseInt(basePrice) });
     res.json({ success: true, player });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -36,9 +38,11 @@ router.post('/players', async (req, res) => {
 
 router.post('/owners', async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, totalCoins } = req.body;
+    if (!name || !email || !password) return res.status(400).json({ error: 'All fields required' });
     const hashed = await bcrypt.hash(password, 10);
-    const owner = await Owner.create({ name, email, password: hashed });
+    const coins = parseInt(totalCoins) || 15000;
+    const owner = await Owner.create({ name, email, password: hashed, totalCoins: coins, availableCoins: coins });
     res.json({ success: true, owner });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -46,7 +50,7 @@ router.post('/owners', async (req, res) => {
 });
 
 router.get('/players', async (req, res) => {
-  const players = await Player.find();
+  const players = await Player.find().sort({ group: 1 });
   res.json(players);
 });
 
@@ -55,8 +59,23 @@ router.get('/owners', async (req, res) => {
   res.json(owners);
 });
 
+router.put('/owners/:id/coins', async (req, res) => {
+  try {
+    const { coins } = req.body;
+    const owner = await Owner.findByIdAndUpdate(req.params.id, { totalCoins: coins, availableCoins: coins, reservedCoins: 0 }, { new: true });
+    res.json({ success: true, owner });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 router.delete('/players/:id', async (req, res) => {
   await Player.findByIdAndDelete(req.params.id);
+  res.json({ success: true });
+});
+
+router.delete('/owners/:id', async (req, res) => {
+  await Owner.findByIdAndDelete(req.params.id);
   res.json({ success: true });
 });
 

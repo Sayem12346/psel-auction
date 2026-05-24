@@ -94,9 +94,8 @@ function AdminDashboard() {
             <h3 className="text-lg font-bold text-white mb-3">Add Player</h3>
             <input className="w-full bg-gray-800 text-white p-2 rounded-lg mb-2" placeholder="Name" value={playerForm.name} onChange={e => setPlayerForm({...playerForm, name: e.target.value})} />
             <input className="w-full bg-gray-800 text-white p-2 rounded-lg mb-2" placeholder="Role (e.g. Fragger)" value={playerForm.role} onChange={e => setPlayerForm({...playerForm, role: e.target.value})} />
-            <select className="w-full bg-gray-800 text-white p-2 rounded-lg mb-2" value={playerForm.group} onChange={e => setPlayerForm({...playerForm, group: e.target.value})}>
+            <input className="w-full bg-gray-800 text-white p-2 rounded-lg mb-2" placeholder="Group name (e.g. Elite, Pro, A, B)" value={playerForm.group} onChange={e => setPlayerForm({...playerForm, group: e.target.value})} />
               {['A','B','C','D','E'].map(g => <option key={g} value={g}>Group {g}</option>)}
-            </select>
             <input className="w-full bg-gray-800 text-white p-2 rounded-lg mb-2" placeholder="Base Price" type="number" value={playerForm.basePrice} onChange={e => setPlayerForm({...playerForm, basePrice: parseInt(e.target.value)})} />
             <button onClick={addPlayer} className="w-full bg-red-600 hover:bg-red-700 text-white p-2 rounded-lg font-bold">Add Player</button>
           </div>

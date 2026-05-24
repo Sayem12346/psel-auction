@@ -1,5 +1,4 @@
 const cloudinary = require('cloudinary').v2;
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const multer = require('multer');
 
 cloudinary.config({
@@ -8,14 +7,20 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-const storage = new CloudinaryStorage({
-  cloudinary,
-  params: {
-    folder: 'psel-auction',
-    allowed_formats: ['jpg', 'jpeg', 'png', 'webp']
-  }
-});
-
+const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-module.exports = { cloudinary, upload };
+const uploadToCloudinary = async (buffer, folder) => {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder: folder || 'psel-auction' },
+      (error, result) => {
+        if (error) reject(error);
+        else resolve(result);
+      }
+    );
+    stream.end(buffer);
+  });
+};
+
+module.exports = { cloudinary, upload, uploadToCloudinary };

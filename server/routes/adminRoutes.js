@@ -4,7 +4,7 @@ const Owner = require('../models/Owner');
 const Player = require('../models/Player');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { upload } = require('../config/cloudinary');
+const { upload, uploadToCloudinary } = require('../config/cloudinary');
 
 const ADMIN_EMAIL = 'admin@psel.com';
 const ADMIN_PASSWORD = 'admin123';
@@ -27,13 +27,14 @@ router.get('/stats', async (req, res) => {
 
 router.post('/players', upload.single('image'), async (req, res) => {
   try {
-    const name = req.body.name;
-    const role = req.body.role || '';
-    const group = req.body.group;
-    const basePrice = req.body.basePrice;
+    const { name, role, group, basePrice } = req.body;
     if (!name || !group) return res.status(400).json({ error: 'Name and group required' });
-    const playerImage = req.file ? req.file.path : '';
-    const player = await Player.create({ name, role, group, basePrice: parseInt(basePrice), playerImage });
+    let playerImage = '';
+    if (req.file) {
+      const result = await uploadToCloudinary(req.file.buffer, 'psel-auction/players');
+      playerImage = result.secure_url;
+    }
+    const player = await Player.create({ name, role: role||'', group, basePrice: parseInt(basePrice)||500, playerImage });
     res.json({ success: true, player });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -42,14 +43,15 @@ router.post('/players', upload.single('image'), async (req, res) => {
 
 router.post('/owners', upload.single('image'), async (req, res) => {
   try {
-    const name = req.body.name;
-    const email = req.body.email;
-    const password = req.body.password;
-    const totalCoins = req.body.totalCoins;
+    const { name, email, password, totalCoins } = req.body;
     if (!name || !email || !password) return res.status(400).json({ error: 'All fields required' });
     const hashed = await bcrypt.hash(password, 10);
     const coins = parseInt(totalCoins) || 15000;
-    const profileImage = req.file ? req.file.path : '';
+    let profileImage = '';
+    if (req.file) {
+      const result = await uploadToCloudinary(req.file.buffer, 'psel-auction/owners');
+      profileImage = result.secure_url;
+    }
     const owner = await Owner.create({ name, email, password: hashed, totalCoins: coins, availableCoins: coins, profileImage });
     res.json({ success: true, owner });
   } catch (err) {
@@ -79,7 +81,7 @@ router.put('/owners/:id/coins', async (req, res) => {
 
 router.put('/owners/:id/remove-player', async (req, res) => {
   try {
-    const playerId = req.body.playerId;
+    const { playerId } = req.body;
     await Owner.findByIdAndUpdate(req.params.id, { $pull: { team: playerId } });
     await Player.findByIdAndUpdate(playerId, { status: 'available', soldTo: null, soldPrice: 0 });
     res.json({ success: true });

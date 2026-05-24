@@ -18,6 +18,7 @@ function AdminDashboard() {
   const [msg, setMsg] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // eslint-disable-next-line
   useEffect(() => {
     fetchAll();
     const saved = JSON.parse(localStorage.getItem('psel_groups') || '[]');

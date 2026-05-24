@@ -32,7 +32,7 @@ function AdminDashboard() {
     setGroups(updated);
     localStorage.setItem('psel_groups', JSON.stringify(updated));
     setNewGroup('');
-    showMsg('Group added!');
+    showMsg('✅ Group added!');
   };
 
   const deleteGroup = (g) => {
@@ -42,7 +42,7 @@ function AdminDashboard() {
   };
 
   const addPlayer = async () => {
-    if (!playerForm.name || !playerForm.group) { showMsg('Name and group required!'); return; }
+    if (!playerForm.name || !playerForm.group) { showMsg('❌ Name and group required!'); return; }
     try {
       await axios.post(`${API}/api/admin/players`, playerForm);
       showMsg('✅ Player added!');
@@ -52,7 +52,7 @@ function AdminDashboard() {
   };
 
   const addOwner = async () => {
-    if (!ownerForm.name || !ownerForm.email || !ownerForm.password) { showMsg('All fields required!'); return; }
+    if (!ownerForm.name || !ownerForm.email || !ownerForm.password) { showMsg('❌ All fields required!'); return; }
     try {
       await axios.post(`${API}/api/admin/owners`, ownerForm);
       showMsg('✅ Owner added!');
@@ -62,11 +62,21 @@ function AdminDashboard() {
   };
 
   const updateCoins = async (id) => {
+    if (!editCoins[id]) { showMsg('❌ Enter coin amount!'); return; }
     try {
       await axios.put(`${API}/api/admin/owners/${id}/coins`, { coins: parseInt(editCoins[id]) });
       showMsg('✅ Coins updated!');
+      setEditCoins({...editCoins, [id]: ''});
       fetchOwners();
-    } catch (err) { showMsg('❌ Error updating coins!'); }
+    } catch (err) { showMsg('❌ Error!'); }
+  };
+
+  const removeFromTeam = async (ownerId, playerId) => {
+    try {
+      await axios.put(`${API}/api/admin/owners/${ownerId}/remove-player`, { playerId });
+      showMsg('✅ Player removed from team!');
+      fetchOwners(); fetchPlayers();
+    } catch (err) { showMsg('❌ Error!'); }
   };
 
   const deletePlayer = async (id) => { await axios.delete(`${API}/api/admin/players/${id}`); fetchPlayers(); fetchStats(); };
@@ -74,14 +84,14 @@ function AdminDashboard() {
 
   const showMsg = (m) => { setMsg(m); setTimeout(() => setMsg(''), 3000); };
 
-  const tabs = ['stats', 'groups', 'players', 'owners'];
+  const tabs = ['stats', 'groups', 'players', 'owners', 'coins', 'teams'];
 
   return (
     <div className="min-h-screen bg-gray-950 p-4">
       <h1 className="text-2xl font-bold text-red-500 text-center mb-4">PSEL Admin</h1>
-      <div className="flex gap-2 mb-6 justify-center flex-wrap">
+      <div className="flex gap-2 mb-4 justify-center flex-wrap">
         {tabs.map(t => (
-          <button key={t} onClick={() => { setTab(t); setMsg(''); }} className={`px-4 py-2 rounded-lg font-bold capitalize text-sm ${tab===t ? 'bg-red-600' : 'bg-gray-800'}`}>{t}</button>
+          <button key={t} onClick={() => { setTab(t); setMsg(''); fetchAll(); }} className={`px-3 py-2 rounded-lg font-bold capitalize text-sm ${tab===t ? 'bg-red-600' : 'bg-gray-800'}`}>{t}</button>
         ))}
       </div>
       {msg && <p className="text-center text-green-400 mb-4 font-bold">{msg}</p>}
@@ -108,7 +118,7 @@ function AdminDashboard() {
           <div className="bg-gray-900 p-4 rounded-xl mb-4">
             <h3 className="text-lg font-bold text-white mb-3">Add Group</h3>
             <div className="flex gap-2">
-              <input className="flex-1 bg-gray-800 text-white p-2 rounded-lg" placeholder="Group name (Elite, Pro, Diamond...)" value={newGroup} onChange={e => setNewGroup(e.target.value)} />
+              <input className="flex-1 bg-gray-800 text-white p-2 rounded-lg" placeholder="Group name (Elite, Pro...)" value={newGroup} onChange={e => setNewGroup(e.target.value)} />
               <button onClick={addGroup} className="bg-red-600 text-white px-4 py-2 rounded-lg font-bold">Add</button>
             </div>
           </div>
@@ -129,20 +139,22 @@ function AdminDashboard() {
           <div className="bg-gray-900 p-4 rounded-xl mb-4">
             <h3 className="text-lg font-bold text-white mb-3">Add Player</h3>
             <input className="w-full bg-gray-800 text-white p-2 rounded-lg mb-2" placeholder="Player Name" value={playerForm.name} onChange={e => setPlayerForm({...playerForm, name: e.target.value})} />
-            <input className="w-full bg-gray-800 text-white p-2 rounded-lg mb-2" placeholder="Role (Fragger, IGL, Support...)" value={playerForm.role} onChange={e => setPlayerForm({...playerForm, role: e.target.value})} />
+            <input className="w-full bg-gray-800 text-white p-2 rounded-lg mb-2" placeholder="Role (Fragger, IGL...)" value={playerForm.role} onChange={e => setPlayerForm({...playerForm, role: e.target.value})} />
             <select className="w-full bg-gray-800 text-white p-2 rounded-lg mb-2" value={playerForm.group} onChange={e => setPlayerForm({...playerForm, group: e.target.value})}>
               <option value="">-- Select Group --</option>
               {groups.map((g, i) => <option key={i} value={g}>{g}</option>)}
             </select>
             <input className="w-full bg-gray-800 text-white p-2 rounded-lg mb-2" placeholder="Base Price" type="number" value={playerForm.basePrice} onChange={e => setPlayerForm({...playerForm, basePrice: e.target.value})} />
-            <button onClick={addPlayer} className="w-full bg-red-600 hover:bg-red-700 text-white p-2 rounded-lg font-bold">Add Player</button>
+            <button onClick={addPlayer} className="w-full bg-red-600 text-white p-2 rounded-lg font-bold">Add Player</button>
           </div>
           <div className="space-y-2">
-            {players.map(p => (
+            {players.map((p, i) => (
               <div key={p._id} className="bg-gray-900 p-3 rounded-lg flex justify-between items-center">
                 <div>
-                  <p className="text-white font-bold">{p.name}</p>
-                  <p className="text-gray-400 text-sm">{p.group} | {p.role} | {p.basePrice} coins | <span className={p.status==='sold' ? 'text-green-400' : p.status==='unsold' ? 'text-red-400' : 'text-yellow-400'}>{p.status}</span></p>
+                  <p className="text-white font-bold">#{i+1} {p.name}</p>
+                  <p className="text-gray-400 text-sm">{p.group} | {p.role} | {p.basePrice} coins</p>
+                  {p.status === 'sold' && <p className="text-green-400 text-sm">Sold: {p.soldPrice} coins</p>}
+                  {p.status === 'unsold' && <p className="text-red-400 text-sm">Unsold</p>}
                 </div>
                 <button onClick={() => deletePlayer(p._id)} className="bg-red-800 text-white px-3 py-1 rounded-lg text-sm">Del</button>
               </div>
@@ -159,29 +171,63 @@ function AdminDashboard() {
             <input className="w-full bg-gray-800 text-white p-2 rounded-lg mb-2" placeholder="Email" value={ownerForm.email} onChange={e => setOwnerForm({...ownerForm, email: e.target.value})} />
             <input className="w-full bg-gray-800 text-white p-2 rounded-lg mb-2" type="password" placeholder="Password" value={ownerForm.password} onChange={e => setOwnerForm({...ownerForm, password: e.target.value})} />
             <input className="w-full bg-gray-800 text-white p-2 rounded-lg mb-2" type="number" placeholder="Starting Coins (default 15000)" value={ownerForm.totalCoins} onChange={e => setOwnerForm({...ownerForm, totalCoins: e.target.value})} />
-            <button onClick={addOwner} className="w-full bg-red-600 hover:bg-red-700 text-white p-2 rounded-lg font-bold">Add Owner</button>
+            <button onClick={addOwner} className="w-full bg-red-600 text-white p-2 rounded-lg font-bold">Add Owner</button>
           </div>
           <div className="space-y-2">
             {owners.map(o => (
-              <div key={o._id} className="bg-gray-900 p-3 rounded-lg">
-                <div className="flex justify-between items-center mb-2">
-                  <div>
-                    <p className="text-white font-bold">{o.name}</p>
-                    <p className="text-gray-400 text-sm">{o.email}</p>
-                  </div>
-                  <button onClick={() => deleteOwner(o._id)} className="bg-red-800 text-white px-3 py-1 rounded-lg text-sm">Del</button>
+              <div key={o._id} className="bg-gray-900 p-3 rounded-lg flex justify-between items-center">
+                <div>
+                  <p className="text-white font-bold">{o.name}</p>
+                  <p className="text-gray-400 text-sm">{o.email}</p>
+                  <p className="text-green-400 text-sm">{o.availableCoins} coins</p>
                 </div>
-                <div className="flex gap-2 items-center">
-                  <div className="flex-1">
-                    <p className="text-green-400 text-sm font-bold">Available: {o.availableCoins} coins</p>
-                    <p className="text-yellow-400 text-sm">Reserved: {o.reservedCoins} coins</p>
-                  </div>
-                  <input className="w-24 bg-gray-800 text-white p-1 rounded text-sm" type="number" placeholder="New coins" value={editCoins[o._id] || ''} onChange={e => setEditCoins({...editCoins, [o._id]: e.target.value})} />
-                  <button onClick={() => updateCoins(o._id)} className="bg-blue-600 text-white px-2 py-1 rounded text-sm">Set</button>
-                </div>
+                <button onClick={() => deleteOwner(o._id)} className="bg-red-800 text-white px-3 py-1 rounded-lg text-sm">Del</button>
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {tab === 'coins' && (
+        <div className="max-w-lg mx-auto space-y-3">
+          <h3 className="text-lg font-bold text-white mb-3">Set Owner Coins</h3>
+          {owners.map(o => (
+            <div key={o._id} className="bg-gray-900 p-4 rounded-xl">
+              <p className="text-white font-bold mb-1">{o.name}</p>
+              <p className="text-green-400 text-sm mb-2">Available: {o.availableCoins} | Reserved: {o.reservedCoins} | Total: {o.totalCoins}</p>
+              <div className="flex gap-2">
+                <input className="flex-1 bg-gray-800 text-white p-2 rounded-lg" type="number" placeholder="New coin amount" value={editCoins[o._id] || ''} onChange={e => setEditCoins({...editCoins, [o._id]: e.target.value})} />
+                <button onClick={() => updateCoins(o._id)} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold">Set</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {tab === 'teams' && (
+        <div className="max-w-lg mx-auto space-y-4">
+          <h3 className="text-lg font-bold text-white mb-3">Owner Teams</h3>
+          {owners.map(o => (
+            <div key={o._id} className="bg-gray-900 p-4 rounded-xl">
+              <p className="text-white font-bold text-lg">{o.name}</p>
+              <p className="text-green-400 text-sm mb-3">{o.availableCoins} coins remaining</p>
+              {(!o.team || o.team.length === 0) ? (
+                <p className="text-gray-500 text-sm">No players yet</p>
+              ) : (
+                <div className="space-y-2">
+                  {o.team.map((p, i) => (
+                    <div key={p._id || i} className="bg-gray-800 p-2 rounded-lg flex justify-between items-center">
+                      <div>
+                        <p className="text-white text-sm font-bold">#{i+1} {p.name || 'Player'}</p>
+                        <p className="text-gray-400 text-xs">{p.soldPrice} coins | {p.role}</p>
+                      </div>
+                      <button onClick={() => removeFromTeam(o._id, p._id)} className="text-red-400 text-lg font-bold px-2">✕</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       )}
     </div>

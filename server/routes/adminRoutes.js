@@ -80,3 +80,14 @@ router.delete('/owners/:id', async (req, res) => {
 });
 
 module.exports = router;
+
+router.put('/owners/:id/remove-player', async (req, res) => {
+  try {
+    const { playerId } = req.body;
+    await Owner.findByIdAndUpdate(req.params.id, { $pull: { team: playerId } });
+    await Player.findByIdAndUpdate(playerId, { status: 'available', soldTo: null, soldPrice: 0 });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});

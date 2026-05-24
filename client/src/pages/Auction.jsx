@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { io } from 'socket.io-client';
 
-const API = 'https://your-backend-url.onrender.com';
+const API = 'https://psel-auction.onrender.com';
 const socket = io(API);
 
 function Auction() {

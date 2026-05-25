@@ -74,6 +74,8 @@ function AuctionControl() {
     const remaining = players.filter(p => p._id !== selectedPlayer);
     queueRef.current = remaining;
     setCurrentPlayer(player);
+    const remaining = players.filter(p => p._id !== selectedPlayer).map(p => p._id);
+    socket.emit('setQueue', { queue: remaining });
     socket.emit('startAuction', { playerId: selectedPlayer });
     setPaused(false);
   };

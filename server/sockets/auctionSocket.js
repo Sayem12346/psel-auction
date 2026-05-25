@@ -4,10 +4,16 @@ const Player = require('../models/Player');
 
 let timerInterval = null;
 let isPaused = false;
+let playerQueue = [];
 
 module.exports = (io) => {
   io.on('connection', (socket) => {
     socket.on('joinAuction', () => socket.join('auction'));
+
+    socket.on('setQueue', ({ queue }) => {
+      playerQueue = queue;
+      console.log('Queue set:', playerQueue.length, 'players');
+    });
 
     socket.on('startAuction', async ({ playerId }) => {
       try {
@@ -29,17 +35,14 @@ module.exports = (io) => {
 
     socket.on('pauseAuction', async () => {
       isPaused = true;
-      const auction = await Auction.findOne({ status: 'running' });
-      if (auction) { auction.status = 'paused'; await auction.save(); }
+      await Auction.findOneAndUpdate({ status: 'running' }, { status: 'paused' });
       io.emit('auctionPaused', {});
     });
 
     socket.on('resumeAuction', async () => {
       isPaused = false;
-      const auction = await Auction.findOne({ status: 'paused' });
+      const auction = await Auction.findOneAndUpdate({ status: 'paused' }, { status: 'running' }, { new: true });
       if (auction) {
-        auction.status = 'running';
-        await auction.save();
         io.emit('auctionResumed', {});
         startTimer(io, auction._id);
       }
@@ -84,11 +87,7 @@ function startTimer(io, auctionId) {
         clearInterval(timerInterval);
         if (auction.currentLeader) {
           const winner = await Owner.findById(auction.currentLeader);
-          if (winner) {
-            winner.reservedCoins -= auction.currentBid;
-            winner.team.push(auction.currentPlayer);
-            await winner.save();
-          }
+          if (winner) { winner.reservedCoins -= auction.currentBid; winner.team.push(auction.currentPlayer); await winner.save(); }
           await Player.findByIdAndUpdate(auction.currentPlayer, { status: 'sold', soldTo: auction.currentLeader, soldPrice: auction.currentBid });
           auction.status = 'ended';
           await auction.save();
@@ -98,6 +97,19 @@ function startTimer(io, auctionId) {
           auction.status = 'ended';
           await auction.save();
           io.emit('playerUnsold', {});
+        }
+        if (playerQueue.length > 0) {
+          const nextId = playerQueue.shift();
+          setTimeout(async () => {
+            const nextPlayer = await Player.findById(nextId);
+            if (nextPlayer) {
+              const newAuction = await Auction.create({ currentPlayer: nextId, status: 'running', timer: 30, currentBid: nextPlayer.basePrice });
+              io.emit('auctionStarted', { player: nextPlayer, currentBid: nextPlayer.basePrice, timer: 30 });
+              startTimer(io, newAuction._id);
+            }
+          }, 3000);
+        } else {
+          setTimeout(() => { io.emit('auctionEnded', {}); }, 3000);
         }
       }
     } catch (err) { console.log('Timer error:', err); }

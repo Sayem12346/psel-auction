@@ -5,6 +5,7 @@ import Auction from './pages/Auction';
 import Login from './pages/Login';
 import AdminLogin from './pages/admin/AdminLogin';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import AuctionControl from './pages/admin/AuctionControl';
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/admin" element={<AdminLogin />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/auction" element={<AuctionControl />} />
         </Routes>
       </div>
     </Router>

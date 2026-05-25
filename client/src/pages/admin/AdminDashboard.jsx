@@ -109,7 +109,8 @@ function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-950 p-4">
-      <h1 className="text-2xl font-bold text-red-500 text-center mb-4">PSEL Admin</h1>
+      <h1 className="text-2xl font-bold text-red-500 text-center mb-2">PSEL Admin</h1>
+      <div className="text-center mb-4"><a href="/admin/auction" className="bg-red-600 text-white px-4 py-2 rounded-lg font-bold text-sm">🚀 Auction Control</a></div>
       <div className="flex gap-2 mb-4 justify-center flex-wrap">
         {tabs.map(t => (
           <button key={t} onClick={() => { setTab(t); setMsg(''); fetchAll(); }} className={`px-3 py-2 rounded-lg font-bold capitalize text-sm ${tab===t ? 'bg-red-600' : 'bg-gray-800'}`}>{t}</button>

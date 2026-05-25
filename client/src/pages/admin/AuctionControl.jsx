@@ -146,6 +146,7 @@ function AuctionControl() {
                 </div>
               </div>
             )}
+            <button onClick={() => { socket.emit("skipPlayer"); showMsg("⏭️ Skipped!"); }} className="w-full bg-gray-600 hover:bg-gray-700 text-white p-3 rounded-lg font-bold mb-2">⏭️ Skip Player</button>
             <button onClick={pauseResumeAuction} className={`w-full text-white p-3 rounded-lg font-bold text-lg ${paused ? 'bg-green-600 hover:bg-green-700' : 'bg-yellow-600 hover:bg-yellow-700'}`}>
               {paused ? '▶️ Resume' : '⏸️ Pause'}
             </button>

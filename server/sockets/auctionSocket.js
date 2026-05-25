@@ -39,6 +39,29 @@ module.exports = (io) => {
       io.emit('auctionPaused', {});
     });
 
+    socket.on('skipPlayer', async () => {
+      try {
+        if (timerInterval) clearInterval(timerInterval);
+        const auction = await Auction.findOne({ status: 'running' });
+        if (auction) {
+          await Player.findByIdAndUpdate(auction.currentPlayer, { status: 'unsold' });
+          auction.status = 'ended';
+          await auction.save();
+        }
+        if (playerQueue.length > 0) {
+          const nextId = playerQueue.shift();
+          const nextPlayer = await Player.findById(nextId);
+          if (nextPlayer) {
+            const newAuction = await Auction.create({ currentPlayer: nextId, status: 'running', timer: 30, currentBid: nextPlayer.basePrice });
+            io.emit('auctionStarted', { player: nextPlayer, currentBid: nextPlayer.basePrice, timer: 30 });
+            startTimer(io, newAuction._id);
+          }
+        } else {
+          io.emit('auctionEnded', {});
+        }
+      } catch (err) { console.log('Skip error:', err); }
+    });
+
     socket.on('resumeAuction', async () => {
       isPaused = false;
       const auction = await Auction.findOneAndUpdate({ status: 'paused' }, { status: 'running' }, { new: true });

@@ -1,26 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import Navbar from '../../components/Navbar';
 import axios from 'axios';
 
 const API = 'https://psel-auction.onrender.com';
-
-const Navbar = () => (
-  <nav style={{ background: '#0d0d1a', borderBottom: '1px solid #1e1e3a', padding: '0 24px', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 100 }}>
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-      <div style={{ width: 36, height: 36, background: 'linear-gradient(135deg, #8b5cf6, #ef4444)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 16, color: '#fff', fontFamily: 'Orbitron' }}>P</div>
-      <div>
-        <div style={{ color: '#fff', fontWeight: 900, fontSize: 16, fontFamily: 'Orbitron', lineHeight: 1 }}>PSEL</div>
-        <div style={{ color: '#8b5cf6', fontSize: 9, letterSpacing: 2 }}>ESPORTS AUCTION</div>
-      </div>
-    </div>
-    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-      {[['/', 'Overview'], ['/live', 'Live Auction'], ['/players', 'Players'], ['/teams', 'Teams']].map(([path, label]) => (
-        <Link key={path} to={path} style={{ color: '#9ca3af', textDecoration: 'none', fontSize: 13, fontWeight: 600, padding: '6px 12px', borderRadius: 8, letterSpacing: 1 }}>{label}</Link>
-      ))}
-      <Link to="/owner/login" style={{ background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)', color: '#fff', textDecoration: 'none', padding: '8px 20px', borderRadius: 8, fontSize: 13, fontWeight: 700, letterSpacing: 1 }}>OWNER LOGIN</Link>
-    </div>
-  </nav>
-);
 
 export default function PlayersPage() {
   const [players, setPlayers] = useState([]);

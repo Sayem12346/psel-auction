@@ -58,7 +58,6 @@ export default function Navbar() {
                     <div style={{ color: '#fff', fontWeight: 700, fontSize: 14 }}>{owner.name}</div>
                     <div style={{ color: '#00ff88', fontSize: 12, marginTop: 2 }}>{owner.availableCoins?.toLocaleString()} coins</div>
                   </div>
-                  <Link to="/owner/dashboard" onClick={() => setDropdown(false)} style={{ display: 'block', padding: '10px 16px', color: '#ccc', textDecoration: 'none', fontSize: 13, fontWeight: 600, borderBottom: '1px solid #1e1e3a22' }}>Dashboard</Link>
                   <Link to="/owner/dashboard" onClick={() => setDropdown(false)} style={{ display: 'block', padding: '10px 16px', color: '#ccc', textDecoration: 'none', fontSize: 13, fontWeight: 600, borderBottom: '1px solid #1e1e3a22' }}>My Account</Link>
                   <Link to="/live" onClick={() => setDropdown(false)} style={{ display: 'block', padding: '10px 16px', color: '#ccc', textDecoration: 'none', fontSize: 13, fontWeight: 600, borderBottom: '1px solid #1e1e3a22' }}>Live Auction</Link>
                   <button onClick={logout} style={{ width: '100%', padding: '10px 16px', color: '#ef4444', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>Logout</button>

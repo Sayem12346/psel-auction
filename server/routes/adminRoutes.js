@@ -101,3 +101,23 @@ router.delete('/owners/:id', async (req, res) => {
 });
 
 module.exports = router;
+
+router.put('/auction/max-players', async (req, res) => {
+  try {
+    const { maxPlayers } = req.body;
+    await Auction.findOneAndUpdate({}, { maxPlayersPerTeam: parseInt(maxPlayers) }, { upsert: true });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.get('/auction/status', async (req, res) => {
+  try {
+    const Auction = require('../models/Auction');
+    const auction = await Auction.findOne({ status: { $in: ['running', 'paused'] } }).populate('currentPlayer');
+    res.json(auction || null);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});

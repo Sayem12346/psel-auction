@@ -171,7 +171,7 @@ export default function LivePage() {
                     <div style={{ color: '#6b7280', fontSize: 10, marginBottom: 6 }}>Balance: <span style={{ color: '#00ff88', fontWeight: 700 }}>৳{myOwner?.availableCoins?.toLocaleString()}</span></div>
                     <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
                       {[1000,5000,10000,20000,50000].map(inc => (
-                        <button key={inc} onClick={() => placeBid(currentBid+inc)} style={{ background: '#1e1e3a', border: '1px solid #2e2e4a', color: '#ccc', padding: '5px 8px', borderRadius: 6, cursor: 'pointer', fontSize: 11, fontWeight: 600 }}>+৳{inc/1000}K</button>
+                        <button key={inc} onClick={() => setBidAmount(String(currentBid+inc))} style={{ background: '#1e1e3a', border: '1px solid #2e2e4a', color: '#ccc', padding: '5px 8px', borderRadius: 6, cursor: 'pointer', fontSize: 11, fontWeight: 600 }}>+৳{inc/1000}K</button>
                       ))}
                     </div>
                     <div style={{ display: 'flex', gap: 8 }}>
@@ -306,7 +306,7 @@ export default function LivePage() {
                   <div style={{ color: '#6b7280', fontSize: 10, marginBottom: 6 }}>Balance: <span style={{ color: '#00ff88', fontWeight: 700 }}>৳{myOwner?.availableCoins?.toLocaleString()}</span></div>
                   <div style={{ display: 'flex', gap: 4, marginBottom: 8, overflowX: 'auto' }}>
                     {[1000,5000,10000,20000,50000].map(inc => (
-                      <button key={inc} onClick={() => placeBid(currentBid+inc)} style={{ background: '#1e1e3a', border: '1px solid #2e2e4a', color: '#ccc', padding: '5px 8px', borderRadius: 6, cursor: 'pointer', fontSize: 10, fontWeight: 600, flexShrink: 0 }}>+৳{inc/1000}K</button>
+                      <button key={inc} onClick={() => setBidAmount(String(currentBid+inc))} style={{ background: '#1e1e3a', border: '1px solid #2e2e4a', color: '#ccc', padding: '5px 8px', borderRadius: 6, cursor: 'pointer', fontSize: 10, fontWeight: 600, flexShrink: 0 }}>+৳{inc/1000}K</button>
                     ))}
                   </div>
                   <div style={{ display: 'flex', gap: 8 }}>

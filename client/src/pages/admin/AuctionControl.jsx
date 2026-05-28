@@ -169,7 +169,7 @@ function AuctionControl() {
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ color: '#fff', fontSize: 13, fontWeight: 600 }}>#{i+1} {p.name} {p._id === currentPlayer?._id ? '🔴' : ''}</div>
-                  <div style={{ color: '#6b7280', fontSize: 11 }}>{p.group} | {p.basePrice} coins {p.status === 'unsold' ? '• Unsold' : ''}</div>
+                  <div style={{ color: '#6b7280', fontSize: 11 }}>{p.group} | {p.basePrice} coins {p.status === 'unsold' ? '• Unsold 🔴' : p.status === 'available' ? '• Available 🟠' : ''}</div>
                 </div>
               </div>
             ))}

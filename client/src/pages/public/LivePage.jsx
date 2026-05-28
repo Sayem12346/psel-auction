@@ -77,22 +77,35 @@ export default function LivePage() {
 
       {/* Sold/Unsold Popup */}
       {popup && (
-        <div style={{ position: 'fixed', inset: 0, background: '#00000088', zIndex: 999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: popup.type === 'sold' ? 'linear-gradient(135deg, #0d2a0d, #0d0d1a)' : 'linear-gradient(135deg, #2a0d0d, #0d0d1a)', border: `2px solid ${popup.type === 'sold' ? '#00ff88' : '#ef4444'}`, borderRadius: 20, padding: '40px 48px', textAlign: 'center', animation: 'popIn 0.3s ease', boxShadow: `0 0 60px ${popup.type === 'sold' ? '#00ff8844' : '#ef444444'}` }}>
-            {popup.type === 'sold' ? (
-              <>
-                <div style={{ fontSize: 48, marginBottom: 12 }}>🏆</div>
-                <div style={{ color: '#00ff88', fontSize: 28, fontWeight: 900, fontFamily: 'Orbitron', marginBottom: 8 }}>SOLD!</div>
-                <div style={{ color: '#fff', fontSize: 18, fontWeight: 700, marginBottom: 6 }}>{popup.winner}</div>
-                <div style={{ color: '#f59e0b', fontSize: 22, fontWeight: 900, fontFamily: 'Orbitron' }}>৳{popup.amount?.toLocaleString()}</div>
-              </>
-            ) : (
-              <>
-                <div style={{ fontSize: 48, marginBottom: 12 }}>❌</div>
-                <div style={{ color: '#ef4444', fontSize: 28, fontWeight: 900, fontFamily: 'Orbitron' }}>UNSOLD!</div>
-                <div style={{ color: '#6b7280', fontSize: 14, marginTop: 8 }}>No bids placed</div>
-              </>
-            )}
+        <div style={{ position: 'fixed', inset: 0, background: '#000000cc', zIndex: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div style={{ background: popup.type === 'sold' ? 'linear-gradient(135deg, #0a1f0a, #0d0d1a)' : 'linear-gradient(135deg, #1f0a0a, #0d0d1a)', border: `2px solid ${popup.type === 'sold' ? '#00ff88' : '#ef4444'}`, borderRadius: 24, padding: '32px 40px', textAlign: 'center', animation: 'popIn 0.4s cubic-bezier(0.175,0.885,0.32,1.275)', boxShadow: `0 0 80px ${popup.type === 'sold' ? '#00ff8833' : '#ef444433'}`, maxWidth: 340, width: '100%' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
+              <div style={{ width: 80, height: 80, borderRadius: 16, background: '#1e1e3a', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: `2px solid ${popup.type === 'sold' ? '#00ff8844' : '#ef444444'}` }}>
+                {popup.player?.playerImage ? <img src={popup.player.playerImage} alt={popup.player.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 32, fontWeight: 900, color: popup.type === 'sold' ? '#00ff88' : '#ef4444', fontFamily: 'Orbitron' }}>{popup.player?.name?.[0] || '?'}</span>}
+              </div>
+            </div>
+            <div style={{ color: popup.type === 'sold' ? '#00ff88' : '#ef4444', fontSize: 32, fontWeight: 900, fontFamily: 'Orbitron', letterSpacing: 4, marginBottom: 8 }}>{popup.type === 'sold' ? 'SOLD' : 'UNSOLD'}</div>
+            <div style={{ color: '#fff', fontSize: 18, fontWeight: 700, marginBottom: 4 }}>{popup.player?.name}</div>
+            <div style={{ display: 'flex', gap: 6, justifyContent: 'center', marginBottom: 12, flexWrap: 'wrap' }}>
+              {popup.player?.role && <span style={{ background: '#8b5cf622', border: '1px solid #8b5cf644', padding: '2px 8px', borderRadius: 4, fontSize: 11, color: '#8b5cf6', fontWeight: 700 }}>{popup.player.role}</span>}
+              {popup.player?.group && <span style={{ background: '#1e1e3a', padding: '2px 8px', borderRadius: 4, fontSize: 11, color: '#9ca3af' }}>{popup.player.group}</span>}
+            </div>
+            <div style={{ borderTop: `1px solid ${popup.type === 'sold' ? '#00ff8822' : '#ef444422'}`, paddingTop: 12, marginTop: 4 }}>
+              {popup.type === 'sold' ? (
+                <>
+                  <div style={{ color: '#6b7280', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Sold To</div>
+                  <div style={{ color: '#f59e0b', fontSize: 16, fontWeight: 700, marginBottom: 8 }}>{popup.winner}</div>
+                  <div style={{ color: '#6b7280', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Final Price</div>
+                  <div style={{ color: '#00ff88', fontSize: 26, fontWeight: 900, fontFamily: 'Orbitron' }}>৳{popup.amount?.toLocaleString()}</div>
+                </>
+              ) : (
+                <>
+                  <div style={{ color: '#6b7280', fontSize: 12, marginBottom: 4 }}>No bids placed</div>
+                  <div style={{ color: '#6b7280', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Base Price</div>
+                  <div style={{ color: '#ef4444', fontSize: 22, fontWeight: 900, fontFamily: 'Orbitron' }}>৳{popup.player?.basePrice?.toLocaleString()}</div>
+                </>
+              )}
+            </div>
           </div>
         </div>
       )}

@@ -80,9 +80,9 @@ function AuctionControl() {
   return (
     <div style={{ minHeight: '100vh', background: '#080812', fontFamily: 'Rajdhani, sans-serif', color: '#fff', padding: 20 }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@400;600;700&display=swap'); *{box-sizing:border-box;margin:0;padding:0}`}</style>
-      <h1 style={{ color: '#ef4444', fontFamily: 'Orbitron', fontSize: 22, marginBottom: 16, textAlign: 'center' }}>Auction Control</h1>
+      <h1 style={{ color: '#00CF33', fontFamily: 'Orbitron', fontSize: 22, marginBottom: 16, textAlign: 'center' }}>Auction Control</h1>
 
-      {msg && <div style={{ background: '#8b5cf622', border: '1px solid #8b5cf644', borderRadius: 8, padding: '10px 16px', color: '#8b5cf6', fontSize: 13, marginBottom: 16, textAlign: 'center' }}>{msg}</div>}
+      {msg && <div style={{ background: '#00CF3322', border: '1px solid #00CF3344', borderRadius: 8, padding: '10px 16px', color: '#00CF33', fontSize: 13, marginBottom: 16, textAlign: 'center' }}>{msg}</div>}
 
       <div style={{ maxWidth: 600, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
 
@@ -107,7 +107,7 @@ function AuctionControl() {
             {selectedPlayerData && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#1e1e3a', borderRadius: 10, padding: 12, marginBottom: 12 }}>
                 <div style={{ width: 52, height: 52, borderRadius: 10, background: '#2e2e4a', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
-                  {selectedPlayerData.playerImage ? <img src={selectedPlayerData.playerImage} alt={selectedPlayerData.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 22, color: '#8b5cf6', fontWeight: 900 }}>{selectedPlayerData.name[0]}</span>}
+                  {selectedPlayerData.playerImage ? <img src={selectedPlayerData.playerImage} alt={selectedPlayerData.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 22, color: '#00CF33', fontWeight: 900 }}>{selectedPlayerData.name[0]}</span>}
                 </div>
                 <div>
                   <div style={{ color: '#fff', fontWeight: 700 }}>{selectedPlayerData.name}</div>
@@ -117,7 +117,7 @@ function AuctionControl() {
               </div>
             )}
 
-            <button onClick={startAuction} style={{ width: '100%', background: 'linear-gradient(135deg, #ef4444, #dc2626)', color: '#fff', border: 'none', padding: '14px', borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: 'pointer', letterSpacing: 1 }}>START AUCTION</button>
+            <button onClick={startAuction} style={{ width: '100%', background: 'linear-gradient(135deg, #00CF33, #00a828)', color: '#fff', border: 'none', padding: '14px', borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: 'pointer', letterSpacing: 1 }}>START AUCTION</button>
           </div>
         )}
 
@@ -128,7 +128,7 @@ function AuctionControl() {
             {currentPlayer && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#1e1e3a', borderRadius: 10, padding: 12, marginBottom: 14 }}>
                 <div style={{ width: 52, height: 52, borderRadius: 10, background: '#2e2e4a', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
-                  {currentPlayer.playerImage ? <img src={currentPlayer.playerImage} alt={currentPlayer.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 22, color: '#ef4444', fontWeight: 900 }}>{currentPlayer.name?.[0]}</span>}
+                  {currentPlayer.playerImage ? <img src={currentPlayer.playerImage} alt={currentPlayer.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 22, color: '#00CF33', fontWeight: 900 }}>{currentPlayer.name?.[0]}</span>}
                 </div>
                 <div>
                   <div style={{ color: '#fff', fontWeight: 700 }}>{currentPlayer.name}</div>
@@ -139,7 +139,7 @@ function AuctionControl() {
             )}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 14 }}>
               <div style={{ background: '#1e1e3a', borderRadius: 8, padding: '10px', textAlign: 'center' }}>
-                <div style={{ color: auction?.timer <= 5 ? '#ef4444' : '#fff', fontSize: 22, fontWeight: 900, fontFamily: 'Orbitron' }}>{auction?.timer}s</div>
+                <div style={{ color: auction?.timer <= 5 ? '#00CF33' : '#fff', fontSize: 22, fontWeight: 900, fontFamily: 'Orbitron' }}>{auction?.timer}s</div>
                 <div style={{ color: '#6b7280', fontSize: 10 }}>Timer</div>
               </div>
               <div style={{ background: '#1e1e3a', borderRadius: 8, padding: '10px', textAlign: 'center' }}>
@@ -163,9 +163,9 @@ function AuctionControl() {
           <h3 style={{ color: '#fff', fontWeight: 700, marginBottom: 10, fontSize: 14 }}>Players Queue ({players.length})</h3>
           <div style={{ maxHeight: 300, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
             {players.map((p, i) => (
-              <div key={p._id} style={{ display: 'flex', alignItems: 'center', gap: 10, background: p._id === currentPlayer?._id ? '#ef444422' : '#1e1e3a', borderRadius: 8, padding: '8px 12px', border: p._id === currentPlayer?._id ? '1px solid #ef444444' : '1px solid transparent' }}>
+              <div key={p._id} style={{ display: 'flex', alignItems: 'center', gap: 10, background: p._id === currentPlayer?._id ? '#00CF3322' : '#1e1e3a', borderRadius: 8, padding: '8px 12px', border: p._id === currentPlayer?._id ? '1px solid #00CF3344' : '1px solid transparent' }}>
                 <div style={{ width: 32, height: 32, borderRadius: 8, background: '#2e2e4a', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
-                  {p.playerImage ? <img src={p.playerImage} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 13, color: '#8b5cf6', fontWeight: 900 }}>{p.name[0]}</span>}
+                  {p.playerImage ? <img src={p.playerImage} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 13, color: '#00CF33', fontWeight: 900 }}>{p.name[0]}</span>}
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ color: '#fff', fontSize: 13, fontWeight: 600 }}>#{i+1} {p.name} {p._id === currentPlayer?._id ? '🔴' : ''}</div>

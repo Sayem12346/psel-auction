@@ -26,10 +26,11 @@ export default function LivePage() {
     if (stored) setOwner(JSON.parse(stored));
     socket.emit('joinAuction');
     fetchData();
-    socket.on('auctionStarted', (data) => { setCurrentPlayer(data.player); setCurrentBid(data.currentBid); setTimer(data.timer); setCurrentLeader(''); setBidHistory([]); });
+    socket.on('auctionStarted', (data) => { setCurrentPlayer(data.player); setCurrentBid(data.currentBid); setTimer(data.timer); setCurrentLeader(data.currentLeader || ''); setBidHistory(data.bidHistory || []); });
     socket.on('timerUpdate', (data) => setTimer(data.timer));
     socket.on('bidUpdated', (data) => { setCurrentBid(data.currentBid); setCurrentLeader(data.currentLeader); setBidHistory(prev => [{ owner: data.currentLeader, amount: data.currentBid }, ...prev.slice(0, 9)]); });
     socket.on('playerSold', (data) => { setPopup({ type: 'sold', winner: data.winner, amount: data.amount }); setTimeout(() => setPopup(null), 4000); fetchData(); });
+    socket.on('bidError', (data) => { setMsg(data.message); setTimeout(() => setMsg(''), 3000); });
     socket.on('playerUnsold', () => { setPopup({ type: 'unsold' }); setTimeout(() => setPopup(null), 4000); fetchData(); });
     return () => { socket.off('auctionStarted'); socket.off('timerUpdate'); socket.off('bidUpdated'); socket.off('playerSold'); socket.off('playerUnsold'); };
   }, []);

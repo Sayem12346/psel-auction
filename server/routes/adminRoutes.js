@@ -121,3 +121,13 @@ router.get('/auction/status', async (req, res) => {
     res.status(400).json({ error: err.message });
   }
 });
+
+router.post('/auction/close', async (req, res) => {
+  try {
+    const Auction = require('../models/Auction');
+    await Auction.updateMany({}, { status: 'ended' });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});

@@ -6,7 +6,7 @@ const auctionSchema = new mongoose.Schema({
   currentLeader: { type: mongoose.Schema.Types.ObjectId, ref: 'Owner', default: null },
   currentLeaderName: { type: String, default: '' },
   timer: { type: Number, default: 30 },
-  status: { type: String, enum: ['waiting', 'running', 'paused', 'ended'], default: 'waiting' },
+  status: { type: String, enum: ['waiting', 'running', 'paused', 'ended', 'processing', 'transitioning'], default: 'waiting' },
   availableQueue: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Player' }],
   unsoldQueue: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Player' }],
   phase: { type: String, enum: ['available', 'unsold'], default: 'available' },

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Owner = require('../models/Owner');
 const Player = require('../models/Player');
+const Auction = require('../models/Auction');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { upload, uploadToCloudinary } = require('../config/cloudinary');
@@ -36,9 +37,7 @@ router.post('/players', upload.single('image'), async (req, res) => {
     }
     const player = await Player.create({ name, role: role||'', group, basePrice: parseInt(basePrice)||500, playerImage });
     res.json({ success: true, player });
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
+  } catch (err) { res.status(400).json({ error: err.message }); }
 });
 
 router.post('/owners', upload.single('image'), async (req, res) => {
@@ -54,9 +53,7 @@ router.post('/owners', upload.single('image'), async (req, res) => {
     }
     const owner = await Owner.create({ name, email, password: hashed, totalCoins: coins, availableCoins: coins, profileImage });
     res.json({ success: true, owner });
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
+  } catch (err) { res.status(400).json({ error: err.message }); }
 });
 
 router.get('/players', async (req, res) => {
@@ -74,9 +71,7 @@ router.put('/owners/:id/coins', async (req, res) => {
     const coins = parseInt(req.body.coins);
     const owner = await Owner.findByIdAndUpdate(req.params.id, { totalCoins: coins, availableCoins: coins, reservedCoins: 0 }, { new: true });
     res.json({ success: true, owner });
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
+  } catch (err) { res.status(400).json({ error: err.message }); }
 });
 
 router.put('/owners/:id/remove-player', async (req, res) => {
@@ -85,9 +80,7 @@ router.put('/owners/:id/remove-player', async (req, res) => {
     await Owner.findByIdAndUpdate(req.params.id, { $pull: { team: playerId } });
     await Player.findByIdAndUpdate(playerId, { status: 'available', soldTo: null, soldPrice: 0 });
     res.json({ success: true });
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
+  } catch (err) { res.status(400).json({ error: err.message }); }
 });
 
 router.delete('/players/:id', async (req, res) => {
@@ -100,34 +93,18 @@ router.delete('/owners/:id', async (req, res) => {
   res.json({ success: true });
 });
 
-module.exports = router;
-
-router.put('/auction/max-players', async (req, res) => {
-  try {
-    const { maxPlayers } = req.body;
-    await Auction.findOneAndUpdate({}, { maxPlayersPerTeam: parseInt(maxPlayers) }, { upsert: true });
-    res.json({ success: true });
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
-
 router.get('/auction/status', async (req, res) => {
   try {
-    const Auction = require('../models/Auction');
     const auction = await Auction.findOne({ status: { $in: ['running', 'paused'] } }).populate('currentPlayer');
     res.json(auction || null);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
+  } catch (err) { res.status(400).json({ error: err.message }); }
 });
 
 router.post('/auction/close', async (req, res) => {
   try {
-    const Auction = require('../models/Auction');
     await Auction.updateMany({}, { status: 'ended' });
     res.json({ success: true });
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
+  } catch (err) { res.status(400).json({ error: err.message }); }
 });
+
+module.exports = router;

@@ -21,8 +21,6 @@ async function startTimer(io, auctionId) {
       io.emit('timerUpdate', { timer: auction.timer });
       if (auction.timer <= 0) {
         clearTimer();
-        auction.status = 'processing';
-        await auction.save();
         await handleAuctionEnd(io, auctionId);
       }
     } catch (err) { console.log('Timer error:', err.message); }
@@ -38,28 +36,25 @@ async function handleAuctionEnd(io, auctionId) {
     if (auction.currentLeader) {
       const winner = await Owner.findById(auction.currentLeader);
       if (winner) {
-        // Only deduct final bid amount ONCE
-        winner.availableCoins = winner.totalCoins - (winner.team.length > 0 ?
-          (await Player.find({ _id: { $in: winner.team }, status: 'sold' })).reduce((sum, p) => sum + p.soldPrice, 0) + auction.currentBid :
-          auction.currentBid);
         winner.reservedCoins = 0;
+        winner.availableCoins = Math.max(0, winner.availableCoins);
         winner.team.push(auction.currentPlayer);
         await winner.save();
       }
       await Player.findByIdAndUpdate(auction.currentPlayer, {
-        status: 'sold',
-        soldTo: auction.currentLeaderName,
-        soldPrice: auction.currentBid
+        status: 'sold', soldTo: auction.currentLeaderName, soldPrice: auction.currentBid
       });
       io.emit('playerSold', { winner: auction.currentLeaderName, amount: auction.currentBid, player });
     } else {
-      if (!auction.unsoldQueue.map(id => id.toString()).includes(auction.currentPlayer.toString())) {
-        auction.unsoldQueue.push(auction.currentPlayer);
-      }
+      const alreadyIn = auction.unsoldQueue.some(id => id.toString() === auction.currentPlayer.toString());
+      if (!alreadyIn) auction.unsoldQueue.push(auction.currentPlayer);
       await Player.findByIdAndUpdate(auction.currentPlayer, { status: 'unsold' });
       await auction.save();
       io.emit('playerUnsold', { player });
     }
+
+    auction.status = 'transitioning';
+    await auction.save();
 
     setTimeout(async () => {
       await loadNextPlayer(io, auctionId);
@@ -72,27 +67,31 @@ async function loadNextPlayer(io, auctionId) {
     const auction = await Auction.findById(auctionId);
     if (!auction) return;
 
-    let nextPlayerId = null;
+    console.log('loadNextPlayer - availableQueue:', auction.availableQueue.length, 'unsoldQueue:', auction.unsoldQueue.length);
 
-    while (auction.availableQueue.length > 0) {
-      const candidateId = auction.availableQueue.shift();
-      const candidate = await Player.findById(candidateId);
-      if (candidate && candidate.status === 'available') {
-        nextPlayerId = candidateId;
-        break;
+    let nextPlayer = null;
+
+    // Phase 1: available players
+    while (auction.availableQueue.length > 0 && !nextPlayer) {
+      const nextId = auction.availableQueue.shift();
+      const p = await Player.findById(nextId);
+      if (p && p.status === 'available') {
+        nextPlayer = p;
       }
     }
 
-    if (!nextPlayerId && auction.unsoldQueue.length > 0) {
+    // Phase 2: unsold players
+    if (!nextPlayer && auction.unsoldQueue.length > 0) {
       auction.phase = 'unsold';
-      nextPlayerId = auction.unsoldQueue.shift();
+      while (auction.unsoldQueue.length > 0 && !nextPlayer) {
+        const nextId = auction.unsoldQueue.shift();
+        const p = await Player.findById(nextId);
+        if (p) nextPlayer = p;
+      }
     }
 
-    if (nextPlayerId) {
-      const nextPlayer = await Player.findById(nextPlayerId);
-      if (!nextPlayer) { await auction.save(); return loadNextPlayer(io, auctionId); }
-
-      auction.currentPlayer = nextPlayerId;
+    if (nextPlayer) {
+      auction.currentPlayer = nextPlayer._id;
       auction.currentBid = nextPlayer.basePrice;
       auction.currentLeader = null;
       auction.currentLeaderName = '';
@@ -100,6 +99,8 @@ async function loadNextPlayer(io, auctionId) {
       auction.status = 'running';
       auction.bidHistory = [];
       await auction.save();
+
+      console.log('Next player loaded:', nextPlayer.name);
 
       io.emit('auctionStarted', {
         player: nextPlayer,
@@ -112,6 +113,7 @@ async function loadNextPlayer(io, auctionId) {
     } else {
       auction.status = 'ended';
       await auction.save();
+      console.log('Auction ended - no more players');
       io.emit('auctionEnded', {});
     }
   } catch (err) { console.log('Next error:', err.message); }
@@ -140,13 +142,14 @@ module.exports = (io) => {
       try {
         clearTimer();
         await Auction.deleteMany({});
+
         const player = await Player.findById(playerId);
         if (!player) return;
 
-        const allAvailable = await Player.find({ status: 'available' });
-        const availableQueue = allAvailable
-          .filter(p => p._id.toString() !== playerId)
-          .map(p => p._id);
+        const allAvailable = await Player.find({ status: 'available', _id: { $ne: playerId } });
+        const availableQueue = allAvailable.map(p => p._id);
+
+        console.log('Starting auction. First player:', player.name, 'Queue:', availableQueue.length);
 
         const auction = await Auction.create({
           currentPlayer: playerId,
@@ -160,11 +163,7 @@ module.exports = (io) => {
         });
 
         io.emit('auctionStarted', {
-          player,
-          currentBid: player.basePrice,
-          timer: 30,
-          currentLeader: '',
-          bidHistory: []
+          player, currentBid: player.basePrice, timer: 30, currentLeader: '', bidHistory: []
         });
         startTimer(io, auction._id);
       } catch (err) { console.log('Start error:', err.message); }
@@ -180,15 +179,8 @@ module.exports = (io) => {
 
     socket.on('resumeAuction', async () => {
       try {
-        const auction = await Auction.findOneAndUpdate(
-          { status: 'paused' },
-          { status: 'running' },
-          { new: true }
-        );
-        if (auction) {
-          io.emit('auctionResumed', {});
-          startTimer(io, auction._id);
-        }
+        const auction = await Auction.findOneAndUpdate({ status: 'paused' }, { status: 'running' }, { new: true });
+        if (auction) { io.emit('auctionResumed', {}); startTimer(io, auction._id); }
       } catch (err) {}
     });
 
@@ -197,19 +189,11 @@ module.exports = (io) => {
         clearTimer();
         const auction = await Auction.findOne({ status: { $in: ['running', 'paused'] } });
         if (!auction) return;
-
-        const player = await Player.findByIdAndUpdate(
-          auction.currentPlayer,
-          { status: 'unsold' },
-          { new: true }
-        );
-
-        if (!auction.unsoldQueue.map(id => id.toString()).includes(auction.currentPlayer.toString())) {
-          auction.unsoldQueue.push(auction.currentPlayer);
-        }
-        auction.status = 'processing';
+        const player = await Player.findByIdAndUpdate(auction.currentPlayer, { status: 'unsold' }, { new: true });
+        const alreadyIn = auction.unsoldQueue.some(id => id.toString() === auction.currentPlayer.toString());
+        if (!alreadyIn) auction.unsoldQueue.push(auction.currentPlayer);
+        auction.status = 'transitioning';
         await auction.save();
-
         io.emit('playerUnsold', { player });
         setTimeout(async () => { await loadNextPlayer(io, auction._id); }, 3500);
       } catch (err) { console.log('Skip error:', err.message); }
@@ -226,35 +210,34 @@ module.exports = (io) => {
 
         const maxPlayers = auction.maxPlayersPerTeam || 5;
         if (owner.team.length >= maxPlayers) {
-          socket.emit('bidError', { message: 'Team is full! Max ' + maxPlayers + ' players.' });
+          socket.emit('bidError', { message: 'Team full! Max ' + maxPlayers + ' players.' });
           return;
         }
 
-        // Calculate actual available coins (total - already spent on team)
-        const teamPlayers = await Player.find({ _id: { $in: owner.team }, status: 'sold' });
-        const totalSpent = teamPlayers.reduce((sum, p) => sum + (p.soldPrice || 0), 0);
-        const actualAvailable = owner.totalCoins - totalSpent;
-
-        if (actualAvailable < amount) {
-          socket.emit('bidError', { message: 'Insufficient coins! Available: ' + actualAvailable });
+        if (owner.availableCoins < amount) {
+          socket.emit('bidError', { message: 'Insufficient coins! Available: ' + owner.availableCoins });
           return;
         }
 
-        // Release previous leader's reservation
+        // Release previous leader
         if (auction.currentLeader && auction.currentLeader.toString() !== ownerId) {
           const prev = await Owner.findById(auction.currentLeader);
           if (prev) {
-            const prevTeamPlayers = await Player.find({ _id: { $in: prev.team }, status: 'sold' });
-            const prevSpent = prevTeamPlayers.reduce((sum, p) => sum + (p.soldPrice || 0), 0);
-            prev.availableCoins = prev.totalCoins - prevSpent;
-            prev.reservedCoins = 0;
+            prev.availableCoins += auction.currentBid;
+            prev.reservedCoins = Math.max(0, prev.reservedCoins - auction.currentBid);
             await prev.save();
           }
         }
 
         // Update current bidder
-        owner.reservedCoins = amount;
-        owner.availableCoins = actualAvailable - amount;
+        if (!auction.currentLeader || auction.currentLeader.toString() !== ownerId) {
+          owner.availableCoins -= amount;
+          owner.reservedCoins += amount;
+        } else {
+          const diff = amount - auction.currentBid;
+          owner.availableCoins -= diff;
+          owner.reservedCoins += diff;
+        }
         await owner.save();
 
         auction.currentBid = amount;
@@ -264,11 +247,7 @@ module.exports = (io) => {
         auction.bidHistory.push({ owner: ownerId, ownerName: owner.name, amount });
         await auction.save();
 
-        io.emit('bidUpdated', {
-          currentBid: amount,
-          currentLeader: owner.name,
-          timer: auction.timer
-        });
+        io.emit('bidUpdated', { currentBid: amount, currentLeader: owner.name, timer: auction.timer });
       } catch (err) { console.log('Bid error:', err.message); }
     });
 
@@ -281,14 +260,10 @@ module.exports = (io) => {
     });
   });
 
-  // Recover on server restart
   setTimeout(async () => {
     try {
       const auction = await Auction.findOne({ status: 'running' });
-      if (auction) {
-        console.log('Recovering running auction...');
-        startTimer(io, auction._id);
-      }
+      if (auction) { console.log('Recovering auction...'); startTimer(io, auction._id); }
     } catch (err) {}
   }, 2000);
 };

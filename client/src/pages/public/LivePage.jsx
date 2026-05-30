@@ -29,9 +29,9 @@ export default function LivePage() {
     socket.on('auctionStarted', (data) => { setCurrentPlayer(data.player); setCurrentBid(data.currentBid); setTimer(data.timer); setCurrentLeader(data.currentLeader || ''); setBidHistory(data.bidHistory || []); });
     socket.on('timerUpdate', (data) => setTimer(data.timer));
     socket.on('bidUpdated', (data) => { setCurrentBid(data.currentBid); setCurrentLeader(data.currentLeader); setBidHistory(prev => [{ owner: data.currentLeader, amount: data.currentBid }, ...prev.slice(0, 9)]); });
-    socket.on('playerSold', (data) => { setPopup({ type: 'sold', winner: data.winner, amount: data.amount }); setTimeout(() => setPopup(null), 4000); fetchData(); });
+    socket.on('playerSold', (data) => { setPopup({ type: 'sold', winner: data.winner, amount: data.amount, player: data.player }); setTimeout(() => setPopup(null), 4000); fetchData(); });
     socket.on('bidError', (data) => { setMsg(data.message); setTimeout(() => setMsg(''), 3000); });
-    socket.on('playerUnsold', () => { setPopup({ type: 'unsold' }); setTimeout(() => setPopup(null), 4000); fetchData(); });
+    socket.on('playerUnsold', (data) => { setPopup({ type: 'unsold', player: data.player }); setTimeout(() => setPopup(null), 4000); fetchData(); });
     return () => { socket.off('auctionStarted'); socket.off('timerUpdate'); socket.off('bidUpdated'); socket.off('playerSold'); socket.off('playerUnsold'); };
   }, []);
 
